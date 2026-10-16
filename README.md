@@ -21,6 +21,32 @@ Demonstrate a Physical AI perception pipeline that can identify people in a rest
 
 ![Pipeline IR graph](documentation/03_pipeline_ir_graph.png)
 
+## How to Run
+
+### Requirements
+- NVIDIA GPU with compatible NVIDIA drivers
+- Docker and NVIDIA Container Toolkit
+- Linux environment with GPU access
+
+### Run the exported pipeline
+From the extracted `pipegen-workplace-hazard-zone-sentinel` directory, run:
+
+```bash
+./run.sh --input ~/warehouse.mp4 --headless --output ~/videos/export_test
+```
+
+The launcher prepares the pipeline and TensorRT engine if needed, then processes the input video.
+
+### Output files
+- `~/videos/export_test/output.mp4` — processed video
+- `~/videos/export_test/metadata.json` — frame-level JSON metadata
+
+### Verified environment
+Tested on Ubuntu 24.04 under WSL2 with an NVIDIA GeForce RTX 2050 Laptop GPU, using the exported TensorRT FP16 engine.
+
+### Limitations
+The cumulative zone-entry counter and detections have not been independently validated against ground truth. This is a prototype, not a production safety-alert system.
+
 ## Hardware and performance
 - GPU: NVIDIA GeForce RTX 2050 Laptop GPU, 4 GB VRAM
 - TensorRT engine: yolo11s.fp16.plan
