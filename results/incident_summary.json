@@ -1,0 +1,10 @@
+{
+  "project": "Workplace Safety Sentinel",
+  "source_metadata": "/home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/output/metadata.json",
+  "frames_processed": 102,
+  "frames_with_detections": 101,
+  "max_people_detected": 29,
+  "max_people_in_zone": 28,
+  "final_total_entries_counter": 29,
+  "note": "Summary of PipeGen metadata counters; entry count is not independently validated."
+}

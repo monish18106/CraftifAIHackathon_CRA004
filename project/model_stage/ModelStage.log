@@ -1,0 +1,11 @@
+# PipeGen model stage — monish180106/59afef66-616c-4ab2-a003-721d47694035
+# UTC                   step             outcome  fact
+2026-10-16T12:20:39Z  visualize        start    Checking every node against the TensorRT parser…
+2026-10-16T12:21:03Z  visualize        ok       321 nodes · 0 unresolved
+2026-10-16T12:21:54Z  compile          start    Compiling the model with TensorRT at FP16…
+2026-10-16T12:22:05Z  visualize        ok       321 nodes · 0 unresolved
+2026-10-16T12:22:29Z  choice           user     selected_artifact=baseline
+2026-10-16T12:22:29Z  choice           user     optimization_decision=
+2026-10-16T12:22:29Z  compile          warning  fp16 · 255 TRT layers · 27.2 MB
+2026-10-16T12:24:09Z  benchmark        start    Benchmarking the compiled engine on this device…
+2026-10-16T12:24:18Z  engine           ok       8.996 ms mean

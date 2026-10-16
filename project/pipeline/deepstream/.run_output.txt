@@ -1,0 +1,31 @@
+[run.sh] JSON -> /home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/output/metadata.json
+make: Entering directory '/home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/pipeline/deepstream/parsers'
+make: Nothing to be done for 'all'.
+make: Leaving directory '/home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/pipeline/deepstream/parsers'
+Setting pipeline to PAUSED ...
+gstnvtracker: Loading low-level lib at /opt/nvidia/deepstream/deepstream/lib/libnvds_nvmultiobjecttracker.so
+[NvMultiObjectTracker] Initialized
+0:00:00.325100659 [31m 1776[00m 0x64901c54f9f0 [36mINFO   [00m [00m    nvinfer_backport gstnvinfer.cpp:684:gst_nvinfer_backport_logger:<nvinferbackport0>[00m NvDsInferContext[UID 1]: Info from NvDsInferContextImpl::deserializeEngineAndBackend() <nvdsinfer_context_impl.cpp:2161> [UID = 1]: deserialized trt engine from :/home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/model_stage/yolo11s.fp16.plan
+0:00:00.325168113 [31m 1776[00m 0x64901c54f9f0 [36mINFO   [00m [00m    nvinfer_backport gstnvinfer.cpp:684:gst_nvinfer_backport_logger:<nvinferbackport0>[00m NvDsInferContext[UID 1]: Info from NvDsInferContextImpl::generateBackendContext() <nvdsinfer_context_impl.cpp:2264> [UID = 1]: Use deserialized engine model: /home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/model_stage/yolo11s.fp16.plan
+0:00:00.346572269 [31m 1776[00m 0x64901c54f9f0 [36mINFO   [00m [00m    nvinfer_backport gstnvinfer_impl.cpp:343:notifyLoadModelStatus:<nvinferbackport0>[00m [UID 1]: Load new model:/home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/pipeline/deepstream/configs/config_det_pgie.txt sucessfully
+Implicit layer support has been deprecated
+INFO: [Implicit Engine Info]: layers num: 0
+
+Pipeline is PREROLLING ...
+Got context from element 'eglglessink0': gst.egl.EGLDisplay=context, display=(GstEGLDisplay)NULL;
+Failed to query video capabilities: Inappropriate ioctl for device
+[ParseConfigDetPgie] first call: layer=output0 numDims=2 networkInput=640x640 numClasses=80 outputs=1
+[meta_json] file -> /home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/output/metadata.json
+Pipeline is PREROLLED ...
+Setting pipeline to PLAYING ...
+Redistribute latency...
+New clock: GstSystemClock
+Redistribute latency...
+nvstreammux: Successfully handled EOS for source_id=0
+Got EOS from element "pipeline0".
+EOS received - stopping pipeline...
+Execution ended after 0:00:16.840136183
+Setting pipeline to NULL ...
+Freeing pipeline ...
+[NvMultiObjectTracker] De-initialized
+[meta_json] 102 frames, 1959 objects

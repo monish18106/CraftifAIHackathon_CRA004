@@ -1,0 +1,598 @@
+{
+  "loop": {
+    "next_file": null,
+    "next_task": null,
+    "projectTree": {},
+    "target_function": {
+      "name": "read_file",
+      "parameters": {}
+    },
+    "visited_steps": [
+      "/home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/src1/RestrictedAreaMonitoring/application.py",
+      "/home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/src1/RestrictedAreaMonitoring/model/yolo11s.onnx"
+    ]
+  },
+  "pipeline_ir": {
+    "connections": [
+      [
+        "p01oFrame",
+        "p02iFrame"
+      ],
+      [
+        "p01oFrame",
+        "p07iFrame"
+      ],
+      [
+        "p01oTiming",
+        "p06iTiming"
+      ],
+      [
+        "p02oBlob",
+        "p03iBlob"
+      ],
+      [
+        "p02oGeometry",
+        "p04iGeometry"
+      ],
+      [
+        "p03oRaw",
+        "p04iRaw"
+      ],
+      [
+        "p04oPeople",
+        "p05iPeople"
+      ],
+      [
+        "p05oTracks",
+        "p06iTracks"
+      ],
+      [
+        "p05oTracks",
+        "p07iTracks"
+      ],
+      [
+        "p06oZone",
+        "p07iZone"
+      ],
+      [
+        "p06oZone",
+        "p08iZone"
+      ]
+    ],
+    "nodes": [
+      {
+        "description": "Read every video frame and emit source timing.",
+        "id": 1,
+        "name": "file",
+        "ports": [
+          {
+            "direction": "output",
+            "format": {
+              "color": "BGR",
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p01oFrame",
+            "tensor": {
+              "dtype": "uint8",
+              "shape": [
+                720,
+                1280,
+                3
+              ]
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p01oTiming",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "import cv2\ncap = cv2.VideoCapture('/home/gamer/videos/warehouse.mp4')\nif not cap.isOpened(): raise FileNotFoundError('/home/gamer/videos/warehouse.mp4')\nreported_fps = cap.get(cv2.CAP_PROP_FPS)\nfps = reported_fps if reported_fps > 0 else 6.0\nframe_index = 0\nwhile True:\n    ok, frame = cap.read()\n    if not ok: break\n    position_ms = cap.get(cv2.CAP_PROP_POS_MSEC)\n    timestamp_seconds = position_ms / 1000.0 if position_ms >= 0 else frame_index / fps\n    timing = {'frame_index': frame_index, 'timestamp_seconds': float(timestamp_seconds), 'fps': float(fps)}\n    emit(p01oFrame=frame, p01oTiming=timing)\n    frame_index += 1\ncap.release()",
+        "resolution": [
+          1280,
+          720
+        ],
+        "type": "input",
+        "url": "file:///home/gamer/videos/warehouse.mp4"
+      },
+      {
+        "color_order": "RGB",
+        "description": "Letterbox source frames and produce RGB model tensors.",
+        "id": 2,
+        "mean": null,
+        "normalization": 0.00392156862745098,
+        "offset": null,
+        "pad_value": 114,
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": "BGR",
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p02iFrame",
+            "tensor": {
+              "dtype": "uint8",
+              "shape": [
+                720,
+                1280,
+                3
+              ]
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": "RGB",
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p02oBlob",
+            "tensor": {
+              "dtype": "fp32",
+              "shape": [
+                1,
+                3,
+                640,
+                640
+              ]
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p02oGeometry",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "import cv2\nimport numpy as np\norig_h, orig_w = frame.shape[:2]\nr = min(640 / orig_h, 640 / orig_w)\nnew_w, new_h = round(orig_w * r), round(orig_h * r)\nresized = cv2.resize(frame, (new_w, new_h), interpolation=cv2.INTER_LINEAR)\ncanvas = np.full((640, 640, 3), 114, dtype=np.uint8)\npad_x, pad_y = (640 - new_w) // 2, (640 - new_h) // 2\ncanvas[pad_y:pad_y + new_h, pad_x:pad_x + new_w] = resized\nblob = cv2.cvtColor(canvas, cv2.COLOR_BGR2RGB).astype(np.float32) / 255.0\nblob = np.ascontiguousarray(np.transpose(blob, (2, 0, 1))[None])\ngeometry = {'orig_w': orig_w, 'orig_h': orig_h, 'ratio': r, 'pad_x': pad_x, 'pad_y': pad_y}\nreturn blob, geometry",
+        "resize": [
+          640,
+          640
+        ],
+        "resize_mode": "letterbox",
+        "scale": 0.00392156862745098,
+        "std": null,
+        "type": "preprocess"
+      },
+      {
+        "batchSize": 1,
+        "description": "Run YOLO11s detection on the NVIDIA GPU.",
+        "id": 3,
+        "layout": "NCHW",
+        "model": {
+          "inputs": [
+            {
+              "dtype": "fp32",
+              "name": "images",
+              "shape": [
+                1,
+                3,
+                640,
+                640
+              ]
+            }
+          ],
+          "name": "YOLO11s COCO person detector",
+          "outputs": [
+            {
+              "dtype": "fp32",
+              "name": "output0",
+              "shape": [
+                1,
+                84,
+                8400
+              ]
+            }
+          ],
+          "parameter_count": 9485791,
+          "type": "engine",
+          "url": "/home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/model_stage/yolo11s.fp16.plan",
+          "source_onnx": "/home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/src1/RestrictedAreaMonitoring/model/yolo11s.onnx"
+        },
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": "RGB",
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p03iBlob",
+            "tensor": {
+              "dtype": "fp32",
+              "shape": [
+                1,
+                3,
+                640,
+                640
+              ]
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p03oRaw",
+            "tensor": {
+              "dtype": "fp32",
+              "shape": [
+                1,
+                84,
+                8400
+              ]
+            }
+          }
+        ],
+        "pseudo_code": "import onnxruntime as ort\nmodel_path = '/home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/src1/RestrictedAreaMonitoring/model/yolo11s.onnx'\nproviders = ort.get_available_providers()\nselected = []\nif 'TensorrtExecutionProvider' in providers:\n    selected.append(('TensorrtExecutionProvider', {'trt_fp16_enable': True}))\nif 'CUDAExecutionProvider' in providers: selected.append('CUDAExecutionProvider')\nif not selected: raise RuntimeError('An NVIDIA GPU inference provider is required')\nsess = ort.InferenceSession(model_path, providers=selected)\nraw = sess.run(['output0'], {'images': blob})[0]\nreturn raw",
+        "type": "inference"
+      },
+      {
+        "description": "Decode person boxes and retain ByteTrack association candidates.",
+        "id": 4,
+        "label_file_path": null,
+        "num_classes": 80,
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p04iRaw",
+            "tensor": {
+              "dtype": "fp32",
+              "shape": [
+                1,
+                84,
+                8400
+              ]
+            }
+          },
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p04iGeometry",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p04oPeople",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "import cv2\nimport numpy as np\n# The 80 class-score channels follow the model's COCO names; channel 0 is person.\n# Preserve the detector's 0.35 confidence threshold for primary detections.\n# Lower-scoring person candidates are separately retained for ByteTrack's second match.\npreds = np.squeeze(raw, 0).T\nboxes_xywh, scores = preds[:, :4], preds[:, 4:]\nclass_ids = np.argmax(scores, axis=1)\nconfidences = scores[np.arange(scores.shape[0]), class_ids]\nkeep = (class_ids == 0) & (confidences >= 0.1)\nboxes_xywh, confidences = boxes_xywh[keep], confidences[keep]\nhigh, low = [], []\nif len(boxes_xywh):\n    cx, cy, w, h = boxes_xywh.T\n    ratio, pad_x, pad_y = geometry['ratio'], geometry['pad_x'], geometry['pad_y']\n    orig_w, orig_h = geometry['orig_w'], geometry['orig_h']\n    x1 = np.clip((cx - w / 2 - pad_x) / ratio, 0, orig_w)\n    y1 = np.clip((cy - h / 2 - pad_y) / ratio, 0, orig_h)\n    x2 = np.clip((cx + w / 2 - pad_x) / ratio, 0, orig_w)\n    y2 = np.clip((cy + h / 2 - pad_y) / ratio, 0, orig_h)\n    rects = np.stack([x1, y1, x2 - x1, y2 - y1], axis=1)\n    kept = cv2.dnn.NMSBoxes(rects.tolist(), confidences.tolist(), 0.1, 0.45)\n    kept = np.array(kept).flatten() if len(kept) else []\n    for i in kept:\n        det = {'box': [float(x1[i]), float(y1[i]), float(x2[i]), float(y2[i])], 'score': float(confidences[i]), 'class': 'person'}\n        if det['score'] >= 0.35: high.append(det)\n        else: low.append(det)\nreturn {'high': high, 'low': low}",
+        "task": "detection",
+        "threshold": 0.35,
+        "top_items": null,
+        "type": "postprocess"
+      },
+      {
+        "category": "tracking",
+        "description": "Associate high and low confidence people across frames.",
+        "external_assets": [],
+        "id": 5,
+        "inputs": [
+          "person detection candidates"
+        ],
+        "name": "person tracking",
+        "outputs": [
+          "observed person tracks"
+        ],
+        "parameters": {
+          "high_score": 0.35,
+          "iou_threshold": 0.3,
+          "low_score": 0.1,
+          "max_age": 15,
+          "method": "ByteTrack"
+        },
+        "placement": {
+          "attach_point": null,
+          "position": "post_nn"
+        },
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p05iPeople",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p05oTracks",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "import numpy as np\nfrom scipy.optimize import linear_sum_assignment\n# Persist tracks and next_id for this input throughout the complete video.\n# tracks maps ID to {'mean','cov','box','score','misses','trail'}; next_id starts at 1.\ndef xyah(box):\n    x1, y1, x2, y2 = box\n    h = max(float(y2-y1), 1e-6)\n    return np.array([(x1+x2)/2, (y1+y2)/2, max(float(x2-x1), 1e-6)/h, h], dtype=float)\ndef as_box(mean):\n    cx, cy, a, h = mean[:4]\n    h = max(float(h), 1e-6)\n    w = max(float(a*h), 1e-6)\n    return [float(cx-w/2), float(cy-h/2), float(cx+w/2), float(cy+h/2)]\ndef center(box):\n    return [int((box[0]+box[2])/2), int((box[1]+box[3])/2)]\ndef iou(a, b):\n    ix1, iy1 = max(a[0],b[0]), max(a[1],b[1])\n    ix2, iy2 = min(a[2],b[2]), min(a[3],b[3])\n    inter = max(0,ix2-ix1)*max(0,iy2-iy1)\n    area_a = max(0,a[2]-a[0])*max(0,a[3]-a[1])\n    area_b = max(0,b[2]-b[0])*max(0,b[3]-b[1])\n    union = area_a+area_b-inter\n    return inter/union if union > 0 else 0.0\ndef predict(t):\n    f = np.eye(8); f[:4,4:] = np.eye(4)\n    h = max(t['mean'][3],1e-6)\n    std = np.array([h/20,h/20,1e-2,h/20,h/160,h/160,1e-5,h/160])\n    t['mean'] = f @ t['mean']\n    t['cov'] = f @ t['cov'] @ f.T + np.diag(std**2)\n    t['predicted_box'] = as_box(t['mean'])\ndef correct(t, det):\n    hmat = np.eye(4,8)\n    h = max(t['mean'][3],1e-6)\n    r = np.diag(np.array([h/20,h/20,1e-1,h/20])**2)\n    innovation = xyah(det['box']) - hmat @ t['mean']\n    projected = hmat @ t['cov'] @ hmat.T + r\n    gain = t['cov'] @ hmat.T @ np.linalg.pinv(projected)\n    t['mean'] += gain @ innovation\n    t['cov'] = (np.eye(8)-gain@hmat) @ t['cov']\n    t['box'] = det['box']; t['score'] = det['score']; t['misses'] = 0\n    t['trail'].append(center(det['box'])); t['trail'] = t['trail'][-30:]\ndef match(ids, detections):\n    if not ids or not detections: return [], list(ids), list(range(len(detections)))\n    cost = np.array([[1-iou(tracks[tid]['predicted_box'], d['box']) for d in detections] for tid in ids])\n    rows, cols = linear_sum_assignment(cost)\n    pairs = [(ids[r],int(c)) for r,c in zip(rows,cols) if 1-cost[r,c] >= 0.3]\n    used_ids = {tid for tid,_ in pairs}; used_dets = {j for _,j in pairs}\n    return pairs, [tid for tid in ids if tid not in used_ids], [j for j in range(len(detections)) if j not in used_dets]\nactive_before = [tid for tid,t in tracks.items() if t['misses'] == 0]\nfor t in tracks.values(): predict(t)\nhigh = people['high']; low = people['low']\nfirst, remaining, unused_high = match(list(tracks), high)\nfor tid,j in first: correct(tracks[tid],high[j])\nsecond_pool = [tid for tid in remaining if tid in active_before]\nsecond, _, _ = match(second_pool,low)\nfor tid,j in second: correct(tracks[tid],low[j])\nmatched = {tid for tid,_ in first+second}\nfor tid in list(tracks):\n    if tid not in matched:\n        tracks[tid]['misses'] += 1\n        if tracks[tid]['misses'] > 15: del tracks[tid]\nfor j in unused_high:\n    d = high[j]; measurement = xyah(d['box']); h = measurement[3]\n    mean = np.r_[measurement,np.zeros(4)]\n    std = np.array([2*h/20,2*h/20,1e-2,2*h/20,10*h/160,10*h/160,1e-5,10*h/160])\n    tracks[next_id] = {'mean':mean,'cov':np.diag(std**2),'box':d['box'],'score':d['score'],'misses':0,'trail':[center(d['box'])]}\n    next_id += 1\n# Missed tracks remain available for association, but never count as current observations.\nreturn [{'track_id':tid,'box':t['box'],'score':t['score'],'class':'person','trail':list(t['trail'])} for tid,t in tracks.items() if t['misses'] == 0]",
+        "reference_path": null,
+        "runs_every_frame": true,
+        "state_key": "global",
+        "triggers": [],
+        "type": "custom"
+      },
+      {
+        "category": "gating",
+        "description": "Record timestamped outside-to-inside transitions for tracked people.",
+        "external_assets": [],
+        "id": 6,
+        "inputs": [
+          "observed person tracks",
+          "source timing"
+        ],
+        "name": "hazard-zone entry event",
+        "outputs": [
+          "zone status and entry incidents"
+        ],
+        "parameters": {
+          "frame_size_px": [
+            1280,
+            720
+          ],
+          "method": "Zone-entry transition",
+          "polygon_vertices_px": [
+            [
+              480,
+              300
+            ],
+            [
+              800,
+              300
+            ],
+            [
+              800,
+              560
+            ],
+            [
+              480,
+              560
+            ]
+          ]
+        },
+        "placement": {
+          "attach_point": null,
+          "position": "post_tracker"
+        },
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p06iTracks",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          },
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p06iTiming",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          },
+          {
+            "direction": "output",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p06oZone",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "import cv2\nimport numpy as np\n# Persist previous_inside by track ID and total_entries for this input.\n# previous_inside starts empty; total_entries starts at zero.\npolygon = [[480,300],[800,300],[800,560],[480,560]]\ncontour = np.array(polygon,dtype=np.float32)\ninside_ids = []\nevents = []\nfor track in observed_tracks:\n    tid = track['track_id']\n    x1,y1,x2,y2 = track['box']\n    foot = (float((x1+x2)/2),float(y2))\n    inside = cv2.pointPolygonTest(contour,foot,False) >= 0\n    if inside: inside_ids.append(tid)\n    # Initial presence inside has no observed outside-to-inside transition.\n    if tid in previous_inside and not previous_inside[tid] and inside:\n        seconds = timing['timestamp_seconds']\n        hours = int(seconds//3600); minutes = int(seconds//60)%60\n        stamp = f'{hours:02d}:{minutes:02d}:{seconds%60:06.3f}'\n        events.append({'event':'hazard_zone_entry','track_id':tid,'class':'person','zone':'central packing-work hazard zone','frame_index':timing['frame_index'],'timestamp':stamp,'timestamp_seconds':seconds,'foot_point_px':[foot[0],foot[1]]})\n        total_entries += 1\n    previous_inside[tid] = inside\nreturn {'events':events,'inside_ids':inside_ids,'current_person_count':len(observed_tracks),'current_inside_count':len(inside_ids),'total_entries':total_entries,'polygon_vertices_px':polygon}",
+        "reference_path": null,
+        "runs_every_frame": true,
+        "state_key": "track_id",
+        "triggers": [],
+        "type": "custom"
+      },
+      {
+        "description": "Display annotated people, hazard zone, and running totals.",
+        "grid": null,
+        "id": 7,
+        "name": "display",
+        "output_type": "single",
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": "BGR",
+              "encoding": "raw"
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p07iFrame",
+            "tensor": {
+              "dtype": "uint8",
+              "shape": [
+                720,
+                1280,
+                3
+              ]
+            }
+          },
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p07iTracks",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          },
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p07iZone",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "import cv2\nimport numpy as np\nout = frame.copy()\npolygon = np.array(zone['polygon_vertices_px'],dtype=np.int32)\ncv2.polylines(out,[polygon],True,(0,0,255),3)\ninside_ids = set(zone['inside_ids'])\nfor track in observed_tracks:\n    tid = track['track_id']; color = (0,0,255) if tid in inside_ids else (0,200,0)\n    x1,y1,x2,y2 = map(int,track['box'])\n    cv2.rectangle(out,(x1,y1),(x2,y2),color,2)\n    for a,b in zip(track['trail'],track['trail'][1:]):\n        cv2.line(out,tuple(a),tuple(b),color,1)\n    cv2.putText(out,f'ID {tid}  '+('IN ZONE' if tid in inside_ids else 'CLEAR'),(x1,max(25,y1-8)),cv2.FONT_HERSHEY_SIMPLEX,0.7,color,2,cv2.LINE_AA)\nbanner = f\"PEOPLE: {zone['current_person_count']}   IN ZONE: {zone['current_inside_count']}   TOTAL ENTRIES: {zone['total_entries']}\"\ncv2.rectangle(out,(0,0),(out.shape[1],47),(0,0,0),-1)\ncv2.putText(out,banner,(12,32),cv2.FONT_HERSHEY_SIMPLEX,0.8,(255,255,255),2,cv2.LINE_AA)\ncv2.imshow('Workplace Hazard Zone Sentinel',out)\ncv2.waitKey(1)",
+        "resolution": [
+          1280,
+          720
+        ],
+        "type": "output",
+        "url": null
+      },
+      {
+        "description": "Persist each timestamped hazard entry as valid JSON.",
+        "grid": null,
+        "id": 8,
+        "name": "json",
+        "output_type": "single",
+        "ports": [
+          {
+            "direction": "input",
+            "format": {
+              "color": null,
+              "encoding": null
+            },
+            "framerate": {
+              "denominator": 1,
+              "numerator": 6
+            },
+            "id": "p08iZone",
+            "tensor": {
+              "dtype": null,
+              "shape": null
+            }
+          }
+        ],
+        "pseudo_code": "import json\nimport os\nfrom pathlib import Path\npath = Path('/home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/output/metadata.json')\n# Initialize once, including when the video yields no incidents.\nif not initialized:\n    path.parent.mkdir(parents=True,exist_ok=True)\n    incidents = []\n    path.write_text('[]',encoding='utf-8')\n    initialized = True\nfor incident in zone['events']:\n    incidents.append(incident)\n    temporary = path.with_name(path.name+'.tmp')\n    with temporary.open('w',encoding='utf-8') as stream:\n        json.dump(incidents,stream,ensure_ascii=False,indent=2)\n    os.replace(temporary,path)",
+        "resolution": null,
+        "type": "output",
+        "url": "file:///home/gamer/.pipegen/monish180106/59afef66-616c-4ab2-a003-721d47694035/output/metadata.json"
+      }
+    ]
+  }
+}
