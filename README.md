@@ -13,6 +13,14 @@ Demonstrate a Physical AI perception pipeline that can identify people in a rest
 - Tracking and zone logic: PipeGen RestrictedAreaMonitoring workflow
 - Outputs: live annotated video and JSON metadata
 
+## Pipeline running
+
+![Live pipeline output](documentation/01_live_pipeline.png)
+
+## Pipeline IR node graph
+
+![Pipeline IR graph](documentation/03_pipeline_ir_graph.png)
+
 ## Hardware and performance
 - GPU: NVIDIA GeForce RTX 2050 Laptop GPU, 4 GB VRAM
 - TensorRT engine: yolo11s.fp16.plan
